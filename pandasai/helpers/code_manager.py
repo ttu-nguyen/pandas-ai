@@ -298,7 +298,7 @@ Code running:
             if (
                 self._is_df_overwrite(node)
                 or self._is_jailbreak(node)
-                or self._is_unsafe(node)
+                #or self._is_unsafe(node)
             ):
                 continue
             sanitized_analyze_data.append(node)
