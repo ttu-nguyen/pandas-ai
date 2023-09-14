@@ -214,8 +214,8 @@ class SmartDatalake:
         # set default values for the prompt
         if "dfs" not in default_values:
             prompt.set_var("dfs", self._dfs)
-        if "conversation" not in default_values:
-            prompt.set_var("conversation", self._memory.get_conversation(limit=3))
+        if "context" not in default_values:
+            prompt.set_var("context", self._memory.get_conversation(limit=4))
         for key, value in default_values.items():
             prompt.set_var(key, value)
 
@@ -248,7 +248,7 @@ class SmartDatalake:
 
         self._assign_prompt_id()
 
-        self._memory.add(query, True)
+        #self._memory.add(query, True)
 
         try:
             if (
@@ -263,6 +263,7 @@ class SmartDatalake:
                     # TODO: find a better way to determine the engine,
                     "engine": self._dfs[0].engine,
                     "save_charts_path": self._config.save_charts_path.rstrip("/"),
+                    "question" : query
                 }
                 generate_python_code_instruction = self._get_prompt(
                     "generate_python_code",
