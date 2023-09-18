@@ -25,10 +25,10 @@ class OpenAI(BaseOpenAI):
     """OpenAI LLM using BaseOpenAI Class.
 
     An API call to OpenAI API is sent and response is recorded and returned.
-    The default chat model is **gpt-3.5-turbo** while **text-davinci-003** is only
-    supported completion model.
-    The list of supported Chat models includes ["gpt-4", "gpt-4-0314", "gpt-4-32k",
-     "gpt-4-32k-0314","gpt-3.5-turbo", "gpt-3.5-turbo-0301"].
+    The default chat model is **gpt-3.5-turbo**.
+    The list of supported Chat models includes ["gpt-4", "gpt-4-0613", "gpt-4-32k",
+     "gpt-4-32k-0613", "gpt-3.5-turbo", "gpt-3.5-turbo-16k", "gpt-3.5-turbo-0613",
+     "gpt-3.5-turbo-16k-0613", "gpt-3.5-turbo-instruct"].
 
     """
 
@@ -41,14 +41,15 @@ class OpenAI(BaseOpenAI):
         "gpt-3.5-turbo-16k",
         "gpt-3.5-turbo-0613",
         "gpt-3.5-turbo-16k-0613",
+        "gpt-3.5-turbo-instruct",
     ]
-    _supported_completion_models = ["text-davinci-003"]
 
     model: str = "gpt-3.5-turbo"
 
     def __init__(
         self,
         api_token: Optional[str] = None,
+        api_key_path: Optional[str] = None,
         **kwargs,
     ):
         """
@@ -59,11 +60,16 @@ class OpenAI(BaseOpenAI):
             **kwargs: Extended Parameters inferred from BaseOpenAI class
 
         """
-
         self.api_token = api_token or os.getenv("OPENAI_API_KEY") or None
-        if self.api_token is None:
-            raise APIKeyNotFoundError("OpenAI API key is required")
-        openai.api_key = self.api_token
+        self.api_key_path = api_key_path
+
+        if (not self.api_token) and (not self.api_key_path):
+            raise APIKeyNotFoundError("Either OpenAI API key or key path is required")
+
+        if self.api_token:
+            openai.api_key = self.api_token
+        else:
+            openai.api_key_path = self.api_key_path
 
         self.openai_proxy = kwargs.get("openai_proxy") or os.getenv("OPENAI_PROXY")
         if self.openai_proxy:
@@ -95,9 +101,7 @@ class OpenAI(BaseOpenAI):
         """
         self.last_prompt = instruction.to_string() + suffix
 
-        if self.model in self._supported_completion_models:
-            response = self.completion(self.last_prompt)
-        elif self.model in self._supported_chat_models:
+        if self.model in self._supported_chat_models:
             response = self.chat_completion(self.last_prompt)
         else:
             raise UnsupportedOpenAIModelError("Unsupported model")
